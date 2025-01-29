@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEBUG-BOY Typing Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 800px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        #text-display {
+            font-size: 1.2em;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            line-height: 1.5;
+        }
+
+        #input-area {
+            width: 100%;
+            padding: 10px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        #input-area:focus {
+            outline: none;
+            border: 2px solid #00ff7f;
+        }
+
+        .stats {
+            margin: 10px 0;
+        }
+
+        .stats span {
+            font-weight: bold;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        .controls button {
+            padding: 10px 15px;
+            font-size: 1em;
+            color: #fff;
+            background: #00ff7f;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .controls button:hover {
+            background: #00cc66;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to DEBUG-BOY Typing Test</h1>
+        <div id="text-display">Type the text shown here...</div>
+        <input type="text" id="input-area" placeholder="Start typing here..." autofocus />
+        <div class="stats">
+            <p>Time Remaining: <span id="time-remaining">60</span> seconds</p>
+            <p>Words Per Minute: <span id="wpm">0</span></p>
+            <p>Accuracy: <span id="accuracy">0</span>%</p>
+        </div>
+        <div class="controls">
+            <button onclick="startGame()">Start</button>
+            <button onclick="resetGame()">Reset</button>
+            <label>
+                Timer: 
+                <select id="time-select">
+                    <option value="30">30 seconds</option>
+                    <option value="60" selected>60 seconds</option>
+                    <option value="120">120 seconds</option>
+                </select>
+            </label>
+        </div>
+        <div id="results" class="results">
+            <h2>Game Over!</h2>
+            <p>Your WPM is <span id="final-wpm">0</span>.</p>
+            <p>Your accuracy is <span id="final-accuracy">0</span>%.</p>
+            <button onclick="resetGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const textDisplay = document.getElementById('text-display');
+        const inputArea = document.getElementById('input-area');
+        const timeRemaining = document.getElementById('time-remaining');
+        const wpmDisplay = document.getElementById('wpm');
+        const accuracyDisplay = document.getElementById('accuracy');
+        const timeSelect = document.getElementById('time-select');
+        const results = document.getElementById('results');
+        const finalWpm = document.getElementById('final-wpm');
+        const finalAccuracy = document.getElementById('final-accuracy');
+
+        let timer;
+        let timeLimit = parseInt(timeSelect.value);
+        let timeLeft = timeLimit;
+        let isPlaying = false;
+        let totalWords = 0;
+        let correctWords = 0;
+        let currentText = '';
+
+        function generateLongText() {
+            const words = [
+                "The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog",
+                "Typing", "is", "a", "skill", "that", "improves", "with", "practice",
+                "Debugging", "is", "twice", "as", "hard", "as", "writing", "the", "code",
+                "in", "the", "first", "place", "Stay", "consistent", "and", "you", "will",
+                "see", "progress", "This", "is", "a", "long", "text", "that", "contains",
+                "many", "words", "to", "ensure", "there", "are", "always", "more", "than",
+                "two", "hundred", "elements", "for", "typing", "practice"
+            ];
+
+            let paragraph = '';
+            while (paragraph.split(' ').length < 200) {
+                paragraph += words[Math.floor(Math.random() * words.length)] + ' ';
+            }
+
+            return paragraph.trim();
+        }
+
+        function startGame() {
+            if (isPlaying) return;
+
+            resetGame();
+            isPlaying = true;
+            timeLimit = parseInt(timeSelect.value);
+            timeLeft = timeLimit;
+            currentText = generateLongText();
+            textDisplay.textContent = currentText;
+            inputArea.value = '';
+            inputArea.focus();
+            results.style.display = 'none';
+            timer = setInterval(updateTimer, 1000);
+        }
+
+        function resetGame() {
+            clearInterval(timer);
+            isPlaying = false;
+            timeLeft = timeLimit;
+            totalWords = 0;
+            correctWords = 0;
+            wpmDisplay.textContent = '0';
+            accuracyDisplay.textContent = '0';
+            timeRemaining.textContent = timeLimit;
+            textDisplay.textContent = 'Type the text shown here...';
+            inputArea.value = '';
+            results.style.display = 'none';
+        }
+
+        function updateTimer() {
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                isPlaying = false;
+                calculateResults();
+                return;
+            }
+            timeLeft--;
+            timeRemaining.textContent = timeLeft;
+        }
+
+        inputArea.addEventListener('input', () => {
+            const typedText = inputArea.value.trim();
+            const textArray = currentText.split(' ');
+            const typedArray = typedText.split(' ');
+
+            totalWords = typedArray.length;
+            correctWords = typedArray.filter((word, index) => word === textArray[index]).length;
+
+            const wpm = Math.round((correctWords / (timeLimit - timeLeft)) * 60) || 0;
+            const accuracy = Math.round((correctWords / totalWords) * 100) || 0;
+
+            wpmDisplay.textContent = wpm;
+            accuracyDisplay.textContent = accuracy;
+        });
+
+        timeSelect.addEventListener('change', () => {
+            timeLimit = parseInt(timeSelect.value);
+            resetGame();
+        });
+
+        function calculateResults() {
+            finalWpm.textContent = wpmDisplay.textContent;
+            finalAccuracy.textContent = accuracyDisplay.textContent;
+            results.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
